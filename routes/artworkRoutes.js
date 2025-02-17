@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const Artwork = require("../models/Artwork");
+const User = require("../models/User");
 const { authenticate } = require("../middleware/authMiddleware"); // Authentication Middleware
 const path = require("path");
 
@@ -38,9 +39,20 @@ router.post("/upload", authenticate, upload.single("image"), async (req, res) =>
       return res.status(400).json({ error: "Image file is required" });
     }
 
-    const { title, price } = req.body;
+    const { title, description, dimensions, material, price } = req.body;
+    console.log("Received artwork data (req.body):", req.body); // Log received data
+    console.log("Description:", description);
+    console.log("Dimensions:", dimensions);
+    console.log("Material:", material);
+    console.log("Received file data (req.file):", req.file); // Log received file data
     if (!title || !price) {
       return res.status(400).json({ error: "Title and price are required" });
+    }
+
+    // Fetch the logged-in user's details to get the username
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
     }
 
     // Check for duplicate titles
@@ -51,10 +63,15 @@ router.post("/upload", authenticate, upload.single("image"), async (req, res) =>
 
     const newArtwork = new Artwork({
       title,
+      description: description || "No description available", // Default if missing
+      dimensions: dimensions || "Not specified",              // Default if missing
+      material: material || "Not specified",                  // Default if missing
       price,
-      artist: req.user.id, // Automatically assign logged-in user as artist
+      artist: user.username, // Automatically assign logged-in user as artist
       imageUrl: `/uploads/${req.file.filename}`,
     });
+
+    console.log("New Artwork to be saved:", newArtwork); // Log data before saving
 
     await newArtwork.save();
     res.status(201).json({ message: "Artwork uploaded successfully", artwork: newArtwork });

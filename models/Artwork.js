@@ -19,7 +19,7 @@ const ArtworkSchema = new mongoose.Schema(
       trim: true
     },
     artist: { 
-      type: mongoose.Schema.Types.ObjectId, 
+      type: String, 
       ref: "User", 
       required: true 
     },
@@ -32,9 +32,24 @@ const ArtworkSchema = new mongoose.Schema(
       type: String, 
       enum: ["available", "sold"], 
       default: "available" 
+    },
+    dimensions: { 
+      type: String, 
+      required: false, 
+      trim: true 
+    },
+    material: { 
+      type: String, 
+      required: false, 
+      trim: true 
     }
   },
   { timestamps: true } // Automatically adds createdAt & updatedAt fields
 );
+// Optional: Check for pre-save hook
+/*ArtworkSchema.pre('save', function(next) {
+  console.log('Data before saving:', this);
+  next();
+});*/
 
 module.exports = mongoose.model("Artwork", ArtworkSchema);
